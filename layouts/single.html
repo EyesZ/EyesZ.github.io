@@ -1,0 +1,21 @@
+{{ define "main" }}
+<article class="prose">
+  <h1>{{ .Title }}</h1>
+  <p class="meta">
+    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2 January 2006" }}</time>
+    {{- with .ReadingTime }} · {{ . }} min{{ end }}
+    {{- with .Params.tags }} · {{ range $i, $t := . }}{{ if $i }}, {{ end }}<a href="{{ (printf "/tags/%s/" (urlize $t)) | relURL }}">{{ $t }}</a>{{ end }}{{ end }}
+  </p>
+
+  {{- if eq .Section "projects" }}
+  <dl class="project-meta">
+    {{- with .Params.status }}<dt>status</dt><dd>{{ . }}</dd>{{ end }}
+    {{- with .Params.stack }}<dt>stack</dt><dd>{{ delimit . ", " }}</dd>{{ end }}
+    {{- with .Params.repo }}<dt>repo</dt><dd><a href="{{ . }}">{{ . | replaceRE "^https?://" "" }}</a></dd>{{ end }}
+    {{- with .Params.url }}<dt>live</dt><dd><a href="{{ . }}">{{ . | replaceRE "^https?://" "" }}</a></dd>{{ end }}
+  </dl>
+  {{- end }}
+
+  {{ .Content }}
+</article>
+{{ end }}

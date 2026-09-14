@@ -1,0 +1,6 @@
+{{- $labels := dict "writeups" "writeup" "projects" "project" "posts" "idea" }}
+<li class="entry">
+  <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 02" }}</time>
+  <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+  <span class="entry-kind" data-kind="{{ .Section }}">{{ index $labels .Section | default .Section }}</span>
+</li>

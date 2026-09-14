@@ -1,0 +1,40 @@
+{{/* Self-hosted UMD build (11.15.0). Loaded ONLY on pages whose content contains
+     a mermaid fence — see layouts/_markup/render-codeblock-mermaid.html. */}}
+<script src="{{ "/js/mermaid.min.js" | relURL }}"></script>
+<script>
+  (function () {
+    var nodes = [].slice.call(document.querySelectorAll("pre.mermaid"));
+    if (!nodes.length) return;
+
+    // mermaid replaces the element's content with SVG, so keep the source to
+    // re-render from when the theme changes.
+    nodes.forEach(function (n) { n.dataset.src = n.textContent; });
+
+    var mq = matchMedia("(prefers-color-scheme: dark)");
+    function isDark() {
+      var t = document.documentElement.dataset.theme;
+      return t ? t === "dark" : mq.matches;
+    }
+
+    function render() {
+      nodes.forEach(function (n) {
+        n.textContent = n.dataset.src;
+        n.removeAttribute("data-processed");
+      });
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: isDark() ? "dark" : "neutral",
+        fontFamily: "inherit"
+      });
+      mermaid.run({ nodes: nodes });
+    }
+
+    render();
+    new MutationObserver(render).observe(document.documentElement,
+      { attributes: true, attributeFilter: ["data-theme"] });
+    mq.addEventListener("change", function () {
+      // Only follow the system when no explicit choice is stored.
+      if (!document.documentElement.dataset.theme) render();
+    });
+  })();
+</script>

@@ -1,0 +1,28 @@
+{{- $src := .Destination -}}
+{{- $alt := .PlainText -}}
+{{- $r := "" -}}
+{{- if not (urls.Parse $src).IsAbs -}}
+  {{- $r = or (.Page.Resources.GetMatch $src) (resources.Get $src) -}}
+{{- end -}}
+{{- if and $r (in (slice "png" "jpg" "jpeg" "webp" "gif") (lower (path.Ext $src | strings.TrimPrefix "."))) -}}
+  {{/* Explicit width/height keep cumulative layout shift at zero. */}}
+  {{- $big := gt $r.Width 720 -}}
+  {{- $display := cond $big ($r.Resize "720x webp q82") $r -}}
+  {{- $set := "" -}}
+  {{- if $big -}}
+    {{- $x2 := $r.Resize "1440x webp q78" -}}
+    {{- $set = printf "%s 720w, %s 1440w" $display.RelPermalink $x2.RelPermalink -}}
+  {{- end -}}
+  <figure>
+    <img src="{{ $display.RelPermalink }}" alt="{{ $alt }}"
+         width="{{ $display.Width }}" height="{{ $display.Height }}"
+         loading="lazy" decoding="async"
+         {{ with $set }}srcset="{{ . }}" sizes="(max-width: 720px) 100vw, 720px"{{ end }}>
+    {{- with .Title }}<figcaption>{{ . }}</figcaption>{{ end }}
+  </figure>
+{{- else -}}
+  <figure>
+    <img src="{{ $src | safeURL }}" alt="{{ $alt }}" loading="lazy" decoding="async">
+    {{- with .Title }}<figcaption>{{ . }}</figcaption>{{ end }}
+  </figure>
+{{- end -}}

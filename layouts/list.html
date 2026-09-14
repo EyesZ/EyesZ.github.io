@@ -1,0 +1,15 @@
+{{ define "main" }}
+  <h1>{{ .Title }}</h1>
+  {{ with .Content }}<div class="section-intro">{{ . }}</div>{{ end }}
+  {{- $pages := .Pages }}
+  {{- if $pages }}
+    {{- range $pages.GroupByDate "2006" }}
+      <h2 class="year">{{ .Key }}</h2>
+      <ul class="entries">
+        {{- range .Pages }}{{ partial "entry.html" . }}{{ end }}
+      </ul>
+    {{- end }}
+  {{- else }}
+    <p class="empty">Nothing here yet.</p>
+  {{- end }}
+{{ end }}

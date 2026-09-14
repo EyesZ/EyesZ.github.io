@@ -1,0 +1,65 @@
+baseURL = "https://EyesZ.github.io/"
+languageCode = "en-us"
+title = "Eyesz"
+enableRobotsTXT = true
+enableGitInfo = false
+
+# Bio line shown under the header on the home page.
+[params]
+  description = "My own cyberspace."
+  author = "Eyesz"
+  # Footer icons. Each renders only when its value is set, so leaving one
+  # blank simply drops that icon. github/linkedin take the handle, not a URL.
+  github = "Eyesz"
+  linkedin = "joao-pino"
+  email = "eyesz@tutamail.com"
+
+[taxonomies]
+  tag = "tags"
+
+[outputs]
+  home = ["html", "rss", "json"]
+  section = ["html"]
+  taxonomy = ["html"]
+  term = ["html"]
+
+[menus]
+  [[menus.main]]
+    name = "writeups"
+    pageRef = "/writeups"
+    weight = 10
+  [[menus.main]]
+    name = "ideas"
+    pageRef = "/posts"
+    weight = 15
+  [[menus.main]]
+    name = "projects"
+    pageRef = "/projects"
+    weight = 20
+  [[menus.main]]
+    name = "about"
+    pageRef = "/about"
+    weight = 30
+
+[markup]
+  [markup.goldmark.renderer]
+    unsafe = true
+  [markup.goldmark.extensions.passthrough]
+    enable = true
+    [markup.goldmark.extensions.passthrough.delimiters]
+      block = [['\[', '\]'], ['$$', '$$']]
+      inline = [['\(', '\)']]
+  [markup.goldmark.extensions.typographer]
+    disable = false
+  [markup.highlight]
+    noClasses = false
+    lineNos = false
+    tabWidth = 4
+    guessSyntax = true
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 3
+
+[minify]
+  [minify.tdewolff.html]
+    keepQuotes = true

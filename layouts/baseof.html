@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language.LanguageCode }}" dir="ltr">
+<head>
+{{ partial "head.html" . }}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+{{ partial "header.html" . }}
+<main id="main">
+{{ block "main" . }}{{ end }}
+</main>
+{{ partial "footer.html" . }}
+{{/* Rendered after the content, so render hooks have had a chance to flag the page. */}}
+{{ if .Store.Get "hasMermaid" }}{{ partial "mermaid.html" . }}{{ end }}
+</body>
+</html>

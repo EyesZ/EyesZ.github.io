@@ -1,0 +1,4 @@
+{{- $ext := strings.HasPrefix .Destination "http" -}}
+{{- $attrs := "" -}}
+{{- if $ext }}{{ $attrs = " class=\"ext\" rel=\"noopener noreferrer\"" }}{{ end -}}
+<a href="{{ .Destination | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ $attrs | safeHTMLAttr }}>{{ .Text | safeHTML }}</a>

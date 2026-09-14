@@ -1,0 +1,35 @@
+{{- $pages := (where site.RegularPages "Section" "in" (slice "posts" "writeups" "projects")).ByDate.Reverse -}}
+{{- $limit := site.Config.Services.RSS.Limit -}}
+{{- if ge $limit 1 }}{{ $pages = $pages | first $limit }}{{ end -}}
+{{- /* Feed readers do not reliably resolve relative URLs against the feed, so
+       content URLs must be absolute — see $base below. */ -}}
+{{- $base := strings.TrimSuffix "/" site.BaseURL -}}
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>{{ site.Title }}</title>
+    <link>{{ .Permalink }}</link>
+    <description>{{ site.Params.description }}</description>
+    <language>{{ site.Language.LanguageCode }}</language>
+    {{- /* RSS 2.0 requires an email address here, not a name. */ -}}
+    {{- with site.Params.email }}<managingEditor>{{ . }}{{ with site.Params.author }} ({{ . }}){{ end }}</managingEditor>{{ end }}
+    {{- with $pages }}<lastBuildDate>{{ (index . 0).Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</lastBuildDate>{{ end }}
+    {{- with .OutputFormats.Get "rss" }}<atom:link href="{{ .Permalink }}" rel="self" type="application/rss+xml"/>{{ end }}
+    {{- range $pages }}
+    <item>
+      <title>{{ .Title }}</title>
+      <link>{{ .Permalink }}</link>
+      <pubDate>{{ .Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</pubDate>
+      <guid>{{ .Permalink }}</guid>
+      <category>{{ .Section }}</category>
+      {{- range .Params.tags }}<category>{{ . }}</category>{{ end }}
+      <description>{{ .Description | default (.Summary | plainify) | transform.XMLEscape | safeHTML }}</description>
+      {{- /* Anchoring on ="/ only matches paths that are not already absolute,
+             so RE2's lack of lookahead costs nothing. srcset holds several URLs
+             in one attribute and is left alone; readers strip it and fall back
+             to src, which is rewritten here. */ -}}
+      {{- $c := .Content | replaceRE `(<[^>]+\s(?:src|href)=")(/[^"]*)` (printf "${1}%s${2}" $base) }}
+      <content:encoded>{{ $c | transform.XMLEscape | safeHTML }}</content:encoded>
+    </item>
+    {{- end }}
+  </channel>
+</rss>

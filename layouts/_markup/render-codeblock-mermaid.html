@@ -1,0 +1,3 @@
+{{/* Flags the page so baseof.html loads mermaid.js ONLY where a diagram exists. */}}
+{{ .Page.Store.Set "hasMermaid" true }}
+<pre class="mermaid">{{ .Inner | htmlEscape | safeHTML }}</pre>

@@ -1,0 +1,66 @@
+{{ define "main" }}
+<h1>{{ .Title }}</h1>
+{{ with .Content }}<div class="prose">{{ . }}</div>{{ end }}
+<form class="search-form" role="search" onsubmit="return false">
+  <label class="visually-hidden" for="q">Search</label>
+  <input id="q" type="search" autocomplete="off" autofocus placeholder="Search titles, tags, and full text…">
+</form>
+<p id="search-status" class="empty" role="status" aria-live="polite">Loading…</p>
+<ul class="entries" id="search-results"></ul>
+
+<script>
+(function () {
+  var q = document.getElementById("q"),
+      out = document.getElementById("search-results"),
+      status = document.getElementById("search-status"),
+      docs = null;
+
+  var LABELS = { writeups: "writeup", projects: "project", posts: "idea" };
+
+  fetch({{ "/index.json" | relURL }})
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      docs = d;
+      status.textContent = d.length + " entries. Type to filter.";
+      if (q.value) run();
+    })
+    .catch(function () { status.textContent = "Search index failed to load."; });
+
+  function run() {
+    if (!docs) return;
+    var term = q.value.trim().toLowerCase();
+    out.innerHTML = "";
+    if (!term) { status.textContent = docs.length + " entries. Type to filter."; return; }
+
+    var hits = docs.filter(function (d) {
+      return (d.title + " " + d.summary + " " + (d.text || "") + " " + (d.tags || []).join(" ") + " " + d.section)
+        .toLowerCase().indexOf(term) !== -1;
+    });
+
+    status.textContent = hits.length === 0 ? "No matches." :
+      hits.length + (hits.length === 1 ? " match." : " matches.");
+
+    var frag = document.createDocumentFragment();
+    hits.forEach(function (d) {
+      var li = document.createElement("li");
+      li.className = "entry";
+      var t = document.createElement("time");
+      t.dateTime = d.date;
+      t.textContent = d.date;
+      var a = document.createElement("a");
+      a.href = d.url;
+      a.textContent = d.title;
+      var k = document.createElement("span");
+      k.className = "entry-kind";
+      k.setAttribute("data-kind", d.section);
+      k.textContent = LABELS[d.section] || d.section;
+      li.append(t, a, k);
+      frag.appendChild(li);
+    });
+    out.appendChild(frag);
+  }
+
+  q.addEventListener("input", run);
+})();
+</script>
+{{ end }}

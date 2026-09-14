@@ -1,0 +1,2 @@
+{{/* Math is rendered to MathML at build time — no KaTeX JS, no CSS, no fonts on the client. */}}
+{{ transform.ToMath .Inner (dict "output" "mathml" "displayMode" (eq .Type "block")) }}

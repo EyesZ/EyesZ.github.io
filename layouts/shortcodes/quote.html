@@ -1,0 +1,12 @@
+{{- /* RenderString (not markdownify) so inline markup and the site's
+       typographer settings apply the same way they do in page content. */ -}}
+<figure class="pullquote">
+  <blockquote>{{ .Inner | .Page.RenderString }}</blockquote>
+  {{- if or (.Get "by") (.Get "source") }}
+  <figcaption>
+    <span class="lens" aria-hidden="true"></span>
+    {{- with .Get "by" }}<span>{{ . }}</span>{{ end }}
+    {{- with .Get "source" }}<cite>{{ . }}</cite>{{ end }}
+  </figcaption>
+  {{- end }}
+</figure>

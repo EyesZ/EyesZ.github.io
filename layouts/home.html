@@ -1,0 +1,16 @@
+{{ define "main" }}
+  {{ with site.Params.description }}<p class="lede">{{ . }}</p>{{ end }}
+  {{ with .Content }}<div class="prose lede-body">{{ . }}</div>{{ end }}
+
+  {{- $pages := where site.RegularPages "Section" "in" (slice "posts" "writeups" "projects") }}
+  {{- if $pages }}
+    {{- range $pages.GroupByDate "2006" }}
+      <h2 class="year">{{ .Key }}</h2>
+      <ul class="entries">
+        {{- range .Pages }}{{ partial "entry.html" . }}{{ end }}
+      </ul>
+    {{- end }}
+  {{- else }}
+    <p class="empty">Nothing published yet.</p>
+  {{- end }}
+{{ end }}
