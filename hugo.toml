@@ -1,4 +1,4 @@
-baseURL = "https://EyesZ.github.io/"
+baseURL = "https://eyesz.pt/"
 languageCode = "en-us"
 title = "Eyesz"
 enableRobotsTXT = true
@@ -8,8 +8,6 @@ enableGitInfo = false
 [params]
   description = "My own cyberspace."
   author = "Eyesz"
-  # Footer icons. Each renders only when its value is set, so leaving one
-  # blank simply drops that icon. github/linkedin take the handle, not a URL.
   github = "Eyesz"
   linkedin = "joao-pino"
   email = "eyesz@tutamail.com"
