@@ -34,11 +34,6 @@ enableGitInfo = false
     name = "projects"
     pageRef = "/projects"
     weight = 20
-  [[menus.main]]
-    name = "about"
-    pageRef = "/about"
-    weight = 30
-
 [markup]
   [markup.goldmark.renderer]
     unsafe = true

@@ -1,6 +1,6 @@
 {{ define "main" }}
   {{ with site.Params.description }}<p class="lede">{{ . }}</p>{{ end }}
-  {{ with .Content }}<div class="prose lede-body">{{ . }}</div>{{ end }}
+  {{ with .Content }}<div class="prose about">{{ . }}</div>{{ end }}
 
   {{- $pages := where site.RegularPages "Section" "in" (slice "posts" "writeups" "projects") }}
   {{- if $pages }}

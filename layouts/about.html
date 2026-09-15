@@ -1,8 +1,0 @@
-{{ define "main" }}
-{{- /* about.md has no date, so it must not go through single.html, which
-       prints a .meta line unconditionally. */ -}}
-<article class="prose about">
-  <h1>{{ .Title }}</h1>
-  {{ .Content }}
-</article>
-{{ end }}
