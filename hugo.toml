@@ -6,7 +6,7 @@ enableGitInfo = false
 
 # Bio line shown under the header on the home page.
 [params]
-  description = "My own cyberspace."
+  description = "Human."
   author = "Eyesz"
   github = "Eyesz"
   linkedin = "joao-pino"
