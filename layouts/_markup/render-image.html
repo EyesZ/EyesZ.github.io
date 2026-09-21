@@ -6,18 +6,26 @@
 {{- end -}}
 {{- if and $r (in (slice "png" "jpg" "jpeg" "webp" "gif") (lower (path.Ext $src | strings.TrimPrefix "."))) -}}
   {{/* Explicit width/height keep cumulative layout shift at zero. */}}
-  {{- $big := gt $r.Width 720 -}}
-  {{- $display := cond $big ($r.Resize "720x webp q82") $r -}}
-  {{- $set := "" -}}
-  {{- if $big -}}
-    {{- $x2 := $r.Resize "1440x webp q78" -}}
-    {{- $set = printf "%s 720w, %s 1440w" $display.RelPermalink $x2.RelPermalink -}}
+  {{- $max := 960 -}}
+  {{- $display := cond (gt $r.Width $max) ($r.Resize (printf "%dx webp" $max)) $r -}}
+  {{/* Every candidate is capped at the source width: upscaling only ever adds
+       blur and bytes, and these sources top out around 1500px. */}}
+  {{- $set := slice -}}
+  {{- range (slice 640 $max) -}}
+    {{- if lt . $r.Width -}}
+      {{- $c := $r.Resize (printf "%dx webp" .) -}}
+      {{- $set = $set | append (printf "%s %dw" $c.RelPermalink $c.Width) -}}
+    {{- end -}}
   {{- end -}}
-  <figure>
+  {{- $native := cond (gt $r.Width $max) ($r.Resize (printf "%dx webp" $r.Width)) $display -}}
+  {{- $set = $set | append (printf "%s %dw" $native.RelPermalink $native.Width) -}}
+  <figure class="shot">
     <img src="{{ $display.RelPermalink }}" alt="{{ $alt }}"
          width="{{ $display.Width }}" height="{{ $display.Height }}"
+         data-full="{{ $r.RelPermalink }}"
          loading="lazy" decoding="async"
-         {{ with $set }}srcset="{{ . }}" sizes="(max-width: 720px) 100vw, 720px"{{ end }}>
+         srcset="{{ delimit $set ", " }}"
+         sizes="(min-width: 43rem) 40.5rem, calc(100vw - 2.5rem)">
     {{- with .Title }}<figcaption>{{ . }}</figcaption>{{ end }}
   </figure>
 {{- else -}}

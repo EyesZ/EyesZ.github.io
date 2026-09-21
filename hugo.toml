@@ -34,9 +34,21 @@ enableGitInfo = false
     name = "projects"
     pageRef = "/projects"
     weight = 20
+# Screenshots are flat-colour terminal captures, so they downscale badly under
+# the default Box filter and encode badly under the default "photo" hint.
+[imaging]
+  resampleFilter = "Lanczos"
+  [imaging.webp]
+    quality = 90
+    hint = "text"
+
 [markup]
   [markup.goldmark.renderer]
     unsafe = true
+  [markup.goldmark.parser]
+    # Otherwise a lone image becomes <p><figure>…</figure></p>, which the parser
+    # splits into a stray empty paragraph.
+    wrapStandAloneImageWithinParagraph = false
   [markup.goldmark.extensions.passthrough]
     enable = true
     [markup.goldmark.extensions.passthrough.delimiters]

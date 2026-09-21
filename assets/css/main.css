@@ -470,6 +470,44 @@ figcaption {
   font-size: 0.8125rem;
 }
 
+/* ---- figures --------------------------------------------------------------
+   Screenshots stay within the prose column. The source images are far wider
+   than the column, so the extra resolution goes to high-DPI displays and to
+   the click-to-zoom overlay rather than to a wider layout.
+
+   No width is set here on purpose: the global img rule caps the image at the
+   column, and an image narrower than the column keeps its natural size instead
+   of being upscaled to fit.
+   -------------------------------------------------------------------------- */
+.prose figure.shot {
+  margin-block: var(--s-8);
+  margin-inline: 0;
+}
+
+.prose figure.shot img {
+  display: block;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+}
+
+/* Numbering is a document-level concern, so it is scoped to captioned figures
+   rather than to .shot — a remote or SVG figure still numbers in sequence.
+   :has() keeps a caption-less figure from consuming a number. */
+.prose { counter-reset: figure; }
+.prose figure:not(.pullquote):has(figcaption) { counter-increment: figure; }
+.prose figure:not(.pullquote) figcaption {
+  margin-top: var(--s-3);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: pretty;
+}
+.prose figure:not(.pullquote) figcaption::before {
+  content: "Fig. " counter(figure) " \2014 ";
+}
+
 .project-meta {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -560,6 +598,119 @@ figcaption {
   .timeline-item { flex-direction: column; gap: var(--s-1); }
   .timeline-date { width: auto; }
 }
+
+/* ---- table of contents ----------------------------------------------------
+   In-flow card by default (mobile through normal desktop). Past --toc-bp
+   there is room beside the prose column, so it switches to a fixed sidebar
+   positioned off the column's outer edge via calc(), rather than widening
+   the column itself — the reading measure stays exactly as tuned.
+   -------------------------------------------------------------------------- */
+.toc {
+  margin: var(--s-6) 0 var(--s-8);
+  padding: var(--s-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.toc-label {
+  margin: 0 0 var(--s-2);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.toc li > ul { margin-top: 0.1rem; }
+.toc a {
+  display: block;
+  padding: 0.3rem 0 0.3rem var(--s-3);
+  border-left: 2px solid transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.toc li li > a {
+  padding-left: calc(var(--s-3) + var(--s-3));
+  font-size: 0.75rem;
+}
+.toc a:hover { color: var(--fg); }
+.toc a.active { color: var(--accent); border-left-color: var(--accent); }
+
+@media (min-width: 90rem) {
+  .toc {
+    position: fixed;
+    top: 5.5rem;
+    left: calc(50vw - 37.5rem);
+    width: 14rem;
+    max-height: calc(100vh - 7.5rem);
+    overflow-y: auto;
+    margin: 0;
+  }
+}
+
+/* ---- lightbox --------------------------------------------------------------
+   Delegated click handling lives in lightbox.html; this is purely presentational.
+   transform/opacity are compositor-only, so the transition stays off the main
+   thread's layout pass despite the file-level comment above targeting paint.
+   -------------------------------------------------------------------------- */
+.prose figure img { cursor: zoom-in; }
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-8);
+  background: rgba(10, 8, 14, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity var(--t-fast) var(--ease);
+  cursor: zoom-out;
+}
+.lightbox[hidden] { display: none; }
+.lightbox.open { opacity: 1; }
+
+.lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--r-md);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  transform: scale(0.96);
+  transition: transform var(--t-fast) var(--ease);
+}
+.lightbox.open .lightbox-img { transform: scale(1); }
+
+.lightbox-close {
+  position: fixed;
+  top: var(--s-4);
+  right: var(--s-4);
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease);
+}
+.lightbox-close:hover { background: rgba(255, 255, 255, 0.1); }
 
 /* ---- code ---------------------------------------------------------------- */
 code, kbd, pre, samp {

@@ -1,0 +1,56 @@
+{{- /* Content that opens with prose (not a heading) gets wrapped by Hugo in a
+       single synthetic root fragment; unwrap it so we always start from the
+       real top-level headings. */ -}}
+{{- $headings := .Fragments.Headings -}}
+{{- if and (eq (len $headings) 1) (eq (index $headings 0).Title "") -}}
+  {{- $headings = (index $headings 0).Headings -}}
+{{- end -}}
+{{- if ge (len $headings) 2 -}}
+<nav class="toc" aria-label="Table of contents">
+  <p class="toc-label">// Contents</p>
+  <ul>
+    {{- range $headings }}
+    <li><a href="#{{ .ID }}">{{ .Title }}</a>
+      {{- with .Headings }}
+      <ul>
+        {{- range . }}
+        <li><a href="#{{ .ID }}">{{ .Title }}</a></li>
+        {{- end }}
+      </ul>
+      {{- end }}
+    </li>
+    {{- end }}
+  </ul>
+</nav>
+<script>
+(function(){
+  /* This script sits before {{ .Content }} in the DOM, so the headings it
+     needs to observe don't exist yet when an inline script would normally
+     run — wait for the parser to finish the rest of the page first. */
+  document.addEventListener("DOMContentLoaded", function(){
+    var toc = document.querySelector(".toc");
+    if (!toc) return;
+    var links = toc.querySelectorAll("a[href^='#']");
+    var map = {};
+    links.forEach(function(a){ map[a.getAttribute("href").slice(1)] = a; });
+    var headings = Object.keys(map).map(function(id){ return document.getElementById(id); }).filter(Boolean);
+    if (!headings.length) return;
+    var current = null;
+    var setActive = function(id){
+      if (id === current) return;
+      if (current && map[current]) map[current].classList.remove("active");
+      current = id;
+      if (id && map[id]) map[id].classList.add("active");
+    };
+    var observer = new IntersectionObserver(function(entries){
+      var visible = entries.filter(function(e){ return e.isIntersecting; });
+      if (visible.length) {
+        visible.sort(function(a, b){ return a.boundingClientRect.top - b.boundingClientRect.top; });
+        setActive(visible[0].target.id);
+      }
+    }, { rootMargin: "-88px 0px -70% 0px", threshold: 0 });
+    headings.forEach(function(h){ observer.observe(h); });
+  });
+})();
+</script>
+{{- end -}}

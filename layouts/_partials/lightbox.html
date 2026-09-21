@@ -1,0 +1,49 @@
+<div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Enlarged image">
+  <button type="button" class="lightbox-close" aria-label="Close">&times;</button>
+  <img class="lightbox-img" alt="">
+</div>
+<script>
+(function(){
+  var box = document.getElementById("lightbox");
+  var img = box.querySelector(".lightbox-img");
+  var closeBtn = box.querySelector(".lightbox-close");
+  var trigger = null;
+
+  var open = function(source){
+    trigger = source;
+    /* Clear the descriptors before assigning src, or the previous srcset still
+       wins the selection. data-full is the untouched original, so the zoomed
+       view is never a downscaled candidate. */
+    img.removeAttribute("srcset");
+    img.removeAttribute("sizes");
+    img.src = source.dataset.full || source.currentSrc || source.src;
+    img.alt = source.alt || "";
+    box.hidden = false;
+    requestAnimationFrame(function(){ box.classList.add("open"); });
+    document.documentElement.style.overflow = "hidden";
+    closeBtn.focus();
+  };
+
+  var close = function(){
+    box.classList.remove("open");
+    document.documentElement.style.overflow = "";
+    setTimeout(function(){
+      box.hidden = true;
+      img.removeAttribute("src");
+      img.removeAttribute("srcset");
+      img.removeAttribute("sizes");
+    }, 150);
+    if (trigger) { trigger.focus(); trigger = null; }
+  };
+
+  document.addEventListener("click", function(e){
+    var target = e.target.closest(".prose figure img");
+    if (target) { open(target); return; }
+    if (e.target === closeBtn || e.target === box) close();
+  });
+
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && !box.hidden) close();
+  });
+})();
+</script>

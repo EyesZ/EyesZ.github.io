@@ -12,5 +12,6 @@
 {{ partial "footer.html" . }}
 {{/* Rendered after the content, so render hooks have had a chance to flag the page. */}}
 {{ if .Store.Get "hasMermaid" }}{{ partial "mermaid.html" . }}{{ end }}
+{{ partial "lightbox.html" . }}
 </body>
 </html>
