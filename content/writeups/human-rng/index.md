@@ -1,4 +1,16 @@
-# Human (FortID CTF)
++++
+date = '2026-10-10'
+draft = false
+title = 'Cracking a Human RNG'
+description = 'A FortID CTF writeup: recovering a QR-encoded flag by exploiting how a human types "random" bits.'
+tags = ['Crypto', 'Misc', 'CTF', 'FortID']
++++
+
+**FortID CTF · Crypto / Misc**
+
+`QR codes` · `Human RNG` · `Reed-Solomon` · `GF(2) linearity` · `Word search`
+
+---
 
 > You've heard about LCGs, LFSRs, MTs, Xorshifts, RDRANDs, Lavarands...
 >
@@ -29,9 +41,10 @@ The handout's `bitstream.txt` keeps the first 1999 bits and replaces the last 16
 
 ## 2. Dead ends
 
-**LFSR.** Berlekamp-Massey on the 1999 bits reports a linear complexity near 1000. That proves nothing: any random-looking sequence of length n gives about n/2. Rolling that "LFSR" forward produces garbage. (`solve_human.py` in this folder is that failed attempt.)
+**LFSR.** Berlekamp-Massey on the 1999 bits reports a linear complexity near 1000. That proves nothing: any random-looking sequence of length n gives about n/2. Rolling that "LFSR" forward produces garbage.
 
-**The video.** It shows a hand typing about 1700 keystrokes, close to 1681, so it looks like the key being typed. I split keystrokes by sound spectrum, by gap length and by hand motion. None of them track the bit. A real 0/1 split would reproduce the human's habit of switching keys about 70% of the time (section 3). Every feature switches label about 50% of the time, like random labels. The camera sits too low to see which key goes down. Treat the video as flavour.
+**The video.** It shows a hand typing about 1700 keystrokes (dont ask how I counted), close to 1681, so it looks like the key being typed. Initially i tried to look at the video frame by frame but couldn't plus the camera sits too low to see which key goes down. So I split keystrokes by sound spectrum, by gap length. None of them track the bit. Treat the video as flavour.
+A real 0/1 split would reproduce the human's habit of switching keys about 70% of the time (next attack).
 
 ## 3. The weakness: the human
 
@@ -108,8 +121,98 @@ FortID{humans_are_not_good_random_number_generators}
 - Switch rate of the implied key in every block: 0.71, 0.70, 0.72, 0.71. The human's known prefix: 0.70.
 - The implied key matches all 521 key bits that the fixed QR patterns and known flag text determine.
 
-## Takeaways
+---
 
-- Human "random" bits alternate too often. 0.88 bits of entropy per bit sounds close to 1, but over 1681 bits that leaks about 200 bits of information.
-- QR error correction works against the challenge. Its Reed-Solomon bytes turn a wrong guess into noise, and splitting the data into blocks lets you check each part of the flag separately.
-- Berlekamp-Massey always "finds" an LFSR of length n/2 in random data. Don't trust that result.
+## The full solver
+
+One script covers both modes from the top of the post: check the flag, or run the word search that recovers the 12 missing characters.
+
+<details>
+<summary><code>solve.py</code>: full source</summary>
+
+```python
+#!/usr/bin/env python3
+# Human (FortID CTF) solver.
+#   python3 solve.py           verify the flag
+#   python3 solve.py search    recover the 12 middle chars by word search (a few minutes)
+# needs: numpy pillow qrcode wordfreq
+import sys
+import numpy as np
+from PIL import Image
+import qrcode
+from qrcode.constants import ERROR_CORRECT_H
+
+SIZE = 41
+img = np.array(Image.open('ciphertext.png').convert('1'))
+ct = np.array([0 if img[y*10+5, x*10+5] else 1 for y in range(SIZE) for x in range(SIZE)], np.uint8)
+prefix = [int(c) for c in open('bitstream.txt').read().split('<')[0] if c in '01']
+
+
+def qr(flag: bytes):
+    q = qrcode.QRCode(version=6, error_correction=ERROR_CORRECT_H, box_size=1, border=0, mask_pattern=0)
+    q.add_data(qrcode.util.QRData(flag, mode=qrcode.util.MODE_8BIT_BYTE))
+    q.make(fit=False)
+    return np.array(q.get_matrix(), np.uint8).flatten()
+
+
+def switch_rate(flag: bytes):
+    key = ct ^ qr(flag)
+    return np.mean(key[1:] != key[:-1])
+
+
+def search(head: bytes, tail: bytes, n: int):
+    from wordfreq import top_n_list
+    # QR encoding is GF(2)-linear in the data bits: record what each bit of the gap flips.
+    base = head + b'a'*n + tail
+    c0 = qr(base)
+    A = np.zeros((8*n, SIZE*SIZE), np.uint8)
+    for i in range(8*n):
+        f = bytearray(base); f[len(head) + i//8] ^= 0x80 >> (i % 8)
+        A[i] = qr(bytes(f)) ^ c0
+    # switch indicators s_i = k_i ^ k_(i-1) are linear too; keep only the ones the gap can change
+    D = A[:, 1:] ^ A[:, :-1]
+    k0 = ct ^ c0
+    b = k0[1:] ^ k0[:-1]
+    keep = D.any(0)
+    D, b = D[:, keep].astype(np.int64), b[keep]
+    P = len(b)
+
+    def parity(words, offset):
+        X = np.unpackbits(np.frombuffer(b''.join(words), np.uint8).reshape(len(words), -1) ^ ord('a'), axis=1)
+        return (X @ D[8*offset:8*offset + X.shape[1]]) % 2
+
+    pm = lambda v: 1 - 2*v.astype(np.float32)  # switches(g^f) = (P - pm(g).pm(f)) / 2
+    words = {}
+    for w in top_n_list('en', 50000):
+        if w.isascii() and w.isalpha():
+            words.setdefault(len(w), []).append(w.encode())
+
+    best = (0, '')
+    for a in range(1, n-1):                       # three words: a + c + d + 2 underscores = n
+        for c in range(1, n-2-a):
+            d = n-2-a-c
+            X, Y, Z = words.get(a, [])[:300], words.get(c, [])[:1500], words.get(d, [])[:5000]
+            if not (X and Y and Z):
+                continue
+            gx = parity([x+b'_' for x in X], 0) ^ b
+            fy = parity([y+b'_' for y in Y], a+1)
+            FZ = pm(parity(Z, a+c+2)).T
+            for i, x in enumerate(X):
+                S = (P - pm(gx[i] ^ fy) @ FZ) / 2
+                j, k = divmod(int(np.argmax(S)), len(Z))
+                if S[j, k] > best[0]:
+                    best = (int(S[j, k]), (x + b'_' + Y[j] + b'_' + Z[k]).decode())
+                    print(f'{best[0]}/{P} switches  {best[1]}', flush=True)
+    return best[1]
+
+
+if __name__ == '__main__':
+    head, tail = b'FortID{humans_', b'_random_number_generators}'
+    middle = search(head, tail, 12) if sys.argv[1:] == ['search'] else 'are_not_good'
+    flag = head + middle.encode() + tail
+    print(f'human prefix switch rate {np.mean(np.diff(prefix) != 0):.3f}')
+    print(f'recovered key switch rate {switch_rate(flag):.3f}  (random flags give ~0.56)')
+    print(flag.decode())
+```
+
+</details>

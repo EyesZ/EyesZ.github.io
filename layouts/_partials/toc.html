@@ -10,11 +10,11 @@
   <p class="toc-label">// Contents</p>
   <ul>
     {{- range $headings }}
-    <li><a href="#{{ .ID }}">{{ .Title }}</a>
+    <li><a href="#{{ .ID }}">{{ .Title | safeHTML }}</a>
       {{- with .Headings }}
       <ul>
         {{- range . }}
-        <li><a href="#{{ .ID }}">{{ .Title }}</a></li>
+        <li><a href="#{{ .ID }}">{{ .Title | safeHTML }}</a></li>
         {{- end }}
       </ul>
       {{- end }}

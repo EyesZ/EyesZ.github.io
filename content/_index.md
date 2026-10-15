@@ -61,9 +61,8 @@ I am putting myself to the fullest possible use, which is all I think that any c
   </div>
   <div class="card">
     <h4>Quant Analysis</h4>
-    <p>Applying a security and math background to quantitative analysis for fun.</p>
+    <p>Quantitative analysis for fun.</p>
   </div>
 </div>
 
 ---
-
