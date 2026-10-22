@@ -57,7 +57,7 @@ I am putting myself to the fullest possible use, which is all I think that any c
 <div class="card-grid">
   <div class="card">
     <h4>CTF Player</h4>
-    <p>Member of xSTF, competing nationally and internationally in CTF competitions.</p>
+    <p>Member of <a href="xstf.pt">XSTF</a>, competing in CTFs and authoring challengs.</p>
   </div>
   <div class="card">
     <h4>Quant Analysis</h4>
